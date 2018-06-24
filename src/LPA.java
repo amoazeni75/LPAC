@@ -1,3 +1,5 @@
+import org.omg.PortableInterceptor.INACTIVE;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.*;
@@ -136,15 +138,24 @@ public class LPA {
      * @return -1 means all of neighbour have same frequently, else this is the label of most frequently
      */
     public int getMostFrequentlyLabel(Vector<int[]> inputList) {
-        int res = -1;
-
         //calculate frequently of each label
         Map<Integer, Integer> frequently = calculateFrequentlyLabel(inputList);
 
         //sort frequently hashMap based on it's values(Label in this problem)
         frequently = sortByComparator(frequently);
 
-        return res;
+        if(frequently.size() > 1)
+        {
+            Integer lastElement = (Integer) frequently.values().toArray()[frequently.size()-1];
+            Integer onBeforeLastElement = (Integer) frequently.values().toArray()[frequently.size()-2];
+            if(lastElement.equals(onBeforeLastElement))
+                return -1;
+            else
+                return (Integer) frequently.keySet().toArray()[frequently.size()-1];
+        }
+        else
+            return (Integer) frequently.keySet().toArray()[frequently.size()-1];
+
     }
 
     public void showGraph() {

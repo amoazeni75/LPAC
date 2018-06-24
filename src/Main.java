@@ -15,7 +15,7 @@ public class Main {
         testHash.add(new int[]{2,2});
         testHash.add(new int[]{3,9});
         testHash.add(new int[]{4,2});
-        testHash.add(new int[]{5,3});
+        testHash.add(new int[]{5,1});
         testHash.add(new int[]{6,2});
         testHash.add(new int[]{7,1});
         testHash.add(new int[]{8,1});
