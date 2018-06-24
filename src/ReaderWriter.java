@@ -26,11 +26,11 @@ public class ReaderWriter {
         BufferedReader br = new BufferedReader(new FileReader(path));
         String line = br.readLine();
         while (line != null) {
-            String[] parts = line.split(" ");
+            String[] parts = line.split("\\s");
             int source = Integer.parseInt(parts[0]);
             int destination = Integer.parseInt(parts[1]);
             ((Vector) (graph.get(source))).add(new int[]{destination,destination});
-            ((Vector) (graph.get(destination))).add(new int[]{source,source});
+            //((Vector) (graph.get(destination))).add(new int[]{source,source});
             line = br.readLine();
         }
         br.close();
