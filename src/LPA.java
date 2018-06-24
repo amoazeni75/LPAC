@@ -137,18 +137,13 @@ public class LPA {
      */
     public int getMostFrequentlyLabel(Vector<int[]> inputList) {
         int res = -1;
-        Map<Integer, Integer> frequently = new HashMap<>(); // key = label of each neighbour node and value = frequently count
 
-        //calculate frequently count
-        for (int i = 1; i < inputList.size(); i++) {
-            if (frequently.containsKey(inputList.elementAt(i)[1]))
-                frequently.replace(inputList.elementAt(i)[1], frequently.get(inputList.elementAt(i)[1]) + 1);
-            else
-                frequently.put(inputList.elementAt(i)[1], 1);
-        }
+        //calculate frequently of each label
+        Map<Integer, Integer> frequently = calculateFrequentlyLabel(inputList);
 
-        //sort frequently count
+        //sort frequently hashMap based on it's values(Label in this problem)
         frequently = sortByComparator(frequently);
+
         return res;
     }
 
@@ -185,5 +180,17 @@ public class LPA {
         return sortedMap;
     }
 
+    private Map<Integer, Integer> calculateFrequentlyLabel(Vector<int[]> inputList){
+        Map<Integer, Integer> frequently = new HashMap<>(); // key = label of each neighbour node and value = frequently count
+
+        //calculate frequently count
+        for (int i = 1; i < inputList.size(); i++) {
+            if (frequently.containsKey(inputList.elementAt(i)[1]))
+                frequently.replace(inputList.elementAt(i)[1], frequently.get(inputList.elementAt(i)[1]) + 1);
+            else
+                frequently.put(inputList.elementAt(i)[1], 1);
+        }
+        return frequently;
+    }
 
 }
