@@ -3,13 +3,22 @@ import java.util.Vector;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         long startTime = System.currentTimeMillis();
-        LPA sampleDetection = new LPA("./network_2squer.txt", 9);
+        String truePath = "./Test/community.txt";
+        String path = "./Test/network.txt";
+        LPA sampleDetection = new LPA(path, 1000);
         Vector<Integer> res = sampleDetection.getPrediction();
+//        System.out.println("----------------");
+//        for (int i = 0; i < res.size(); i++) {
+//            System.out.println(res.get(i));
+//        }
+        System.out.println("-----------------");
+        System.out.println("NMI : " + TestResult.NMI(res,truePath));
         long endTime = System.currentTimeMillis();
         long duration = (endTime - startTime);
         System.err.println("Execution time : " + duration + " ms");
+
     }
 }
