@@ -1,7 +1,4 @@
-import org.omg.PortableInterceptor.INACTIVE;
-
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,6 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * this class first store data in structure of this :</br>
+ * vector of vector that when you get a vector it contain a node with all neighbour of it's</br>
+ * in first position, stored data of that node in this structure  : imagine an array that first is the number of that node</br>
+ * in the second cell is the label of that node in the main network and in third cell is the percentage that </br>
+ * show how many of the node's neighbour has same label as node in the network.
+ */
 public class LPA {
     private Vector<Vector> graph;
     private Vector<Integer> prediction;
@@ -28,9 +32,7 @@ public class LPA {
     public LPA(String path, int nodesCount) throws IOException {
         this.graph = ReaderWriter.reader(path, nodesCount);
         this.nodesCount = nodesCount;
-        prediction = new Vector<>();
-        for (int i = 0; i <= nodesCount; i++)
-            prediction.add(0);
+        prediction = null;
     }
 
     /**
@@ -43,18 +45,84 @@ public class LPA {
     public Vector<Integer> getPrediction() {
         int t = 1;
         boolean endProcess = false;
-
+        ArrayList<Integer> numberHelp = new ArrayList<>();
+        for (int i = 0; i < graph.size() - 1; i++)
+            numberHelp.add(i + 1);
+//        numberHelp.add(3);
+//        numberHelp.add(4);
+//        numberHelp.add(6);
+//        numberHelp.add(5);
+//        numberHelp.add(1);
+//        numberHelp.add(2);
         while (t < maxIteration && !endProcess) {
             //shuffle all nodes
-            Collections.shuffle(graph);
-            for (Vector node : graph) {
+            Collections.shuffle(numberHelp);
+            //set New Label for each node
+            for (int i = 0; i < numberHelp.size(); i++)
+                setNewLabelOfNode(graph.get(numberHelp.get(i)));
 
-            }
-
-
+            if (checkTermination())
+                endProcess = true;
             t++;
         }
+        prediction = new Vector<>();
+        for (int i = 0; i < graph.size(); i++)
+            prediction.add(((int[]) (graph.get(i).get(0)))[1]);
+
         return prediction;
+    }
+
+    /**
+     * find and set appropriate label for the given node
+     *
+     * @param node is a vector that first element of that is target node that should set it's value
+     */
+    private void setNewLabelOfNode(Vector<int[]> node) {
+        Map<Integer, MyNode> frequently = getMostFrequentlyLabel(node);
+        int result = -1;
+        if (frequently.size() == 0) //this node dose not have any neighbour
+            result = ((int[]) (node.get(0)))[0];
+        else if (frequently.size() == 1) // this node has just one neighbour that we should set it's label same as it's
+            // neighbour's label
+            result = (Integer) frequently.keySet().toArray()[frequently.size() - 1];
+        else if (frequently.size() > 1) {
+            Integer lastElement = ((MyNode) frequently.values().toArray()[frequently.size() - 1]).counter;
+            Integer onBeforeLastElement = ((MyNode) frequently.values().toArray()[frequently.size() - 2]).counter;
+            if (!lastElement.equals(onBeforeLastElement))
+                result = (Integer) frequently.keySet().toArray()[frequently.size() - 1];
+        }
+
+        if (result != -1)
+            ((int[]) (node.get(0)))[1] = result;
+
+        else {//same frequently for all neighbour
+            ArrayList<MyNode> sameFrequentlyLabel = new ArrayList<MyNode>();
+            sameFrequentlyLabel.add((MyNode) frequently.values().toArray()[frequently.size() - 1]);
+            Integer lastFreq = ((MyNode) frequently.values().toArray()[frequently.size() - 1]).counter;
+            for (int i = frequently.size() - 2; i >= 0; i--) {
+                Integer tmp = ((MyNode) frequently.values().toArray()[i]).counter;
+                if (tmp.equals(lastFreq)) {
+                    sameFrequentlyLabel.add((MyNode) frequently.values().toArray()[i]);
+                } else
+                    break;
+            }
+            //try to test cycle
+            for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
+                boolean flag = false;
+                for (int j = 0; j < sameFrequentlyLabel.get(i).counter; j++) {
+                    if (detectCycleBetween2Vertex(((int[]) (node.get(0)))[0], ((int[]) (sameFrequentlyLabel.get(i).nodes.get(j)))[0])) {
+                        ((int[]) (node.get(0)))[1] = sameFrequentlyLabel.get(i).label;
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag)
+                    break;
+            }
+        }
+
+        //update value of node in list of it's neighbour
+        updateValueOfNodeInNeighbourList(node);
     }
 
     /**
@@ -64,53 +132,22 @@ public class LPA {
      * @param target
      * @return
      */
-    public boolean detectCycleBetween2Vertex(int start, int target) {
-        for (int i = 0; i < graph.get(start).size(); i++)
-            if (((int[]) (graph.get(start).get(i)))[0] == target) {
-                ((int[]) (graph.get(start).get(i)))[0] = -1;
-                break;
-            }
-
-        for (int i = 0; i < graph.get(target).size(); i++)
-            if (((int[]) (graph.get(target).get(i)))[0] == start) {
-                ((int[]) (graph.get(target).get(i)))[0] = -1;
-                break;
-            }
-
-
+    private boolean detectCycleBetween2Vertex(int start, int target) {
+        setLabelForDetectCycle(start, target, -1);
+        setLabelForDetectCycle(target, start, -1);
         boolean res = isReachable(start, target);
-
-        for (int i = 0; i < graph.get(start).size(); i++)
-            if (((int[]) (graph.get(start).get(i)))[0] == -1) {
-                ((int[]) (graph.get(start).get(i)))[0] = target;
-                break;
-            }
-
-        for (int i = 0; i < graph.get(target).size(); i++)
-            if (((int[]) (graph.get(target).get(i)))[0] == -1) {
-                ((int[]) (graph.get(target).get(i)))[0] = start;
-                break;
-            }
-
+        setLabelForDetectCycle(start, -1, target);
+        setLabelForDetectCycle(target, -1, start);
         return res;
     }
 
     Boolean isReachable(int s, int d) {
         boolean visited[] = new boolean[nodesCount + 1];
         Arrays.fill(visited, false);
-
-        // Create a queue for BFS
         LinkedList<Integer> queue = new LinkedList<Integer>();
-
-        // Mark the current node as visited and enqueue it
         visited[s] = true;
         queue.add(s);
-
-
-        // 'i' will be used to get all adjacent vertices of a vertex
-        //Iterator<Integer> i;
         while (queue.size() != 0) {
-            // Dequeue a vertex from queue and print it
             s = queue.poll();
             for (int i = 1; i < graph.get(s).size(); i++) {
                 int n = ((int[]) (graph.get(s).get(i)))[0];
@@ -118,17 +155,30 @@ public class LPA {
                     continue;
                 if (n == d)
                     return true;
-
-                // Else, continue to do BFS
                 if (!visited[n]) {
                     visited[n] = true;
                     queue.add(n);
                 }
             }
         }
-
-        // If BFS is complete without visited d
         return false;
+    }
+
+    /**
+     * this method search in the vector of start index and find element that </br>
+     * it's value be same as condition, then change it's value to target value.
+     *
+     * @param start    index of vector that we should search in that
+     * @param target   is the value that we try to find it
+     * @param newValue is the value that after finding target we should set for it
+     */
+    private void setLabelForDetectCycle(int start, int target, int newValue) {
+        for (int i = 1; i < graph.get(start).size(); i++) {
+            if (((int[]) (graph.get(start).get(i)))[0] == target) {
+                ((int[]) (graph.get(start).get(i)))[0] = newValue;
+                return;
+            }
+        }
     }
 
     /**
@@ -137,25 +187,14 @@ public class LPA {
      * @param inputList
      * @return -1 means all of neighbour have same frequently, else this is the label of most frequently
      */
-    public int getMostFrequentlyLabel(Vector<int[]> inputList) {
+    private Map<Integer, MyNode> getMostFrequentlyLabel(Vector<int[]> inputList) {
         //calculate frequently of each label
-        Map<Integer, Integer> frequently = calculateFrequentlyLabel(inputList);
+        Map<Integer, MyNode> frequently = calculateFrequentlyLabel(inputList);
 
         //sort frequently hashMap based on it's values(Label in this problem)
         frequently = sortByComparator(frequently);
 
-        if(frequently.size() > 1)
-        {
-            Integer lastElement = (Integer) frequently.values().toArray()[frequently.size()-1];
-            Integer onBeforeLastElement = (Integer) frequently.values().toArray()[frequently.size()-2];
-            if(lastElement.equals(onBeforeLastElement))
-                return -1;
-            else
-                return (Integer) frequently.keySet().toArray()[frequently.size()-1];
-        }
-        else
-            return (Integer) frequently.keySet().toArray()[frequently.size()-1];
-
+        return frequently;
     }
 
     public void showGraph() {
@@ -169,39 +208,93 @@ public class LPA {
         }
     }
 
-
-
-    private class MyComparator implements Comparator<Entry<Integer, Integer>> {
-        public int compare(Entry<Integer, Integer> o1, Entry<Integer, Integer> o2) {
-            return o1.getValue().compareTo(o2.getValue());
+    private class MyComparator implements Comparator<Entry<Integer, MyNode>> {
+        public int compare(Entry<Integer, MyNode> o1, Entry<Integer, MyNode> o2) {
+            return o1.getValue().counter.compareTo(o2.getValue().counter);
         }
     }
 
-    private Map<Integer, Integer> sortByComparator(Map<Integer, Integer> unsortMap) {
+    private Map<Integer, MyNode> sortByComparator(Map<Integer, MyNode> unsortMap) {
 
-        List<Entry<Integer, Integer>> list = new LinkedList<Entry<Integer, Integer>>(
+        List<Entry<Integer, MyNode>> list = new LinkedList<Entry<Integer, MyNode>>(
                 unsortMap.entrySet());
 
         Collections.sort(list, new MyComparator());
 
-        Map<Integer, Integer> sortedMap = new LinkedHashMap<Integer, Integer>();
-        for (Entry<Integer, Integer> entry : list) {
+        Map<Integer, MyNode> sortedMap = new LinkedHashMap<Integer, MyNode>();
+        for (Entry<Integer, MyNode> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
         return sortedMap;
     }
 
-    private Map<Integer, Integer> calculateFrequentlyLabel(Vector<int[]> inputList){
-        Map<Integer, Integer> frequently = new HashMap<>(); // key = label of each neighbour node and value = frequently count
+    private Map<Integer, MyNode> calculateFrequentlyLabel(Vector<int[]> inputList) {
+        Map<Integer, MyNode> frequently = new HashMap<>(); // key = label of each neighbour node and value = frequently count
 
         //calculate frequently count
         for (int i = 1; i < inputList.size(); i++) {
-            if (frequently.containsKey(inputList.elementAt(i)[1]))
-                frequently.replace(inputList.elementAt(i)[1], frequently.get(inputList.elementAt(i)[1]) + 1);
-            else
-                frequently.put(inputList.elementAt(i)[1], 1);
+            if (frequently.containsKey(inputList.elementAt(i)[1])) {
+                MyNode tmp = frequently.get(inputList.elementAt(i)[1]);
+                tmp.counter = tmp.counter + 1;
+                tmp.nodes.add(inputList.elementAt(i));
+                tmp.label = inputList.elementAt(i)[1];
+                frequently.replace(inputList.elementAt(i)[1], tmp);
+
+            } else {
+                MyNode tmp = new MyNode();
+                tmp.counter = 1;
+                tmp.nodes.add(inputList.elementAt(i));
+                tmp.label = inputList.elementAt(i)[1];
+                frequently.put(inputList.elementAt(i)[1], tmp);
+            }
         }
         return frequently;
     }
 
+    private boolean checkTermination() {
+        boolean res = true;
+        for (int i = 1; i < graph.size(); i++) {
+            int counter = 0;
+            int a = ((int[]) graph.get(i).get(0))[1];
+            for (int j = 1; j < graph.get(i).size(); j++) {
+                int b = ((int[]) graph.get(i).get(j))[1];
+                if (a == b)
+                    counter++;
+            }
+            if (graph.get(i).size() != 1) { //if has more than one neighbour
+                double ratio = counter * 100.0 / (graph.get(i).size() - 1);
+                if (((int[])(graph.get(i).get(0)))[2] != (int) (ratio)) {
+                    ((int[])(graph.get(i).get(0)))[2] = (int) (ratio);
+                    res = false;
+                }
+            } else
+                ((int[])(graph.get(i).get(0)))[2] = 100;
+        }
+        return res;
+    }
+
+    /**
+     * we should update label of node in the list of it's neighbour
+     *
+     * @param nodeID list of node's neighbour
+     */
+    private void updateValueOfNodeInNeighbourList(Vector<int[]> nodeID) {
+        int node = nodeID.get(0)[0];
+        int label = nodeID.get(0)[1];
+        for (int i = 1; i < nodeID.size(); ++i) {
+            Vector<int[]> item = graph.get(((int[]) nodeID.get(i))[0]);
+            for (int j = 1; j < item.size(); j++) {
+                if (((int[]) (item.get(j)))[0] == node) {
+                    ((int[]) (item.get(j)))[1] = label;
+                    break;
+                }
+            }
+        }
+    }
+
+    private class MyNode {
+        Integer counter = new Integer(0);
+        Integer label = 0;
+        ArrayList<int[]> nodes = new ArrayList<>();
+    }
 }

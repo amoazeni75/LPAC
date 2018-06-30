@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.Vector;
 
 /**
- * authors : S.Alireza Moazeni and Ali Arjomand Bigdeli</br>
+ * authors : S.Alireza Moazeni 9423110</br>
+ *           Ali Arjomand Bigdeli 9423008</br>
+ *           AmirKabir University Of Technology</br>
+ *           2018,June
  * in this class we try to read graph from specific file</br>
  */
 public class ReaderWriter {
@@ -20,7 +23,7 @@ public class ReaderWriter {
         Vector graph = new Vector<Vector>();
         for (int i = 0; i <= nodesCount; i++) {
             graph.add(new Vector<int[]>());
-            ((Vector) (graph.get(i))).add(new int[]{i,i});
+            ((Vector) (graph.get(i))).add(new int[]{i,i,-1});
         }
 
         BufferedReader br = new BufferedReader(new FileReader(path));
@@ -29,7 +32,7 @@ public class ReaderWriter {
             String[] parts = line.split("\\s");
             int source = Integer.parseInt(parts[0]);
             int destination = Integer.parseInt(parts[1]);
-            ((Vector) (graph.get(source))).add(new int[]{destination,destination});
+            ((Vector) (graph.get(source))).add(new int[]{destination,destination,-1});
             //((Vector) (graph.get(destination))).add(new int[]{source,source});
             line = br.readLine();
         }
