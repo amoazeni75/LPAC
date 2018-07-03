@@ -297,4 +297,40 @@ public class LPA {
         Integer label = 0;
         ArrayList<int[]> nodes = new ArrayList<>();
     }
+
+    public int getShortestPath(int u, int v){
+        Vector<Boolean> visited = new Vector<Boolean>(nodesCount + 1);
+        for (int i = 0; i < nodesCount + 1; i++)
+            visited.addElement(false);
+
+        // Initialize distances as 0
+        Vector<Integer> distance = new Vector<Integer>(nodesCount + 1);
+        for (int i = 0; i < nodesCount + 1; i++)
+            distance.addElement(0);
+
+
+        // queue to do BFS.
+        Queue<Integer> Q = new LinkedList<>();
+        distance.setElementAt(0, u);
+
+        Q.add(u);
+        visited.setElementAt(true, u);
+        while (!Q.isEmpty())
+        {
+            int x = Q.peek();
+            Q.poll();
+
+            for (int i=1; i< graph.get(x).size(); i++)
+            {
+                if (visited.elementAt(((int[])(graph.get(x).get(i)))[0]))
+                    continue;
+
+                // update distance for i
+                distance.setElementAt(distance.get(x) + 1,((int[])(graph.get(x).get(i)))[0]);
+                Q.add(((int[])(graph.get(x).get(i)))[0]);
+                visited.setElementAt(true,((int[])(graph.get(x).get(i)))[0]);
+            }
+        }
+        return distance.get(v);
+    }
 }
