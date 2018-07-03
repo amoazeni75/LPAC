@@ -16,7 +16,7 @@ import java.util.Map.Entry;
  * in the second cell is the label of that node in the main network and in third cell is the percentage that </br>
  * show how many of the node's neighbour has same label as node in the network.
  */
-public class LPA extends Thread {
+public class LPALC extends Thread {
     private Vector<Vector> graph;
     public Vector<Integer> prediction;
     private int nodesCount;
@@ -29,7 +29,7 @@ public class LPA extends Thread {
      * @param path       is the location of network file
      * @param nodesCount is the number of nodes in the community
      */
-    public LPA(String path, int nodesCount) throws IOException {
+    public LPALC(String path, int nodesCount) throws IOException {
         this.graph = ReaderWriter.reader(path, nodesCount);
         this.nodesCount = nodesCount;
         prediction = null;
@@ -107,9 +107,49 @@ public class LPA extends Thread {
                 } else
                     break;
             }
-            int label = new Random().nextInt(sameFrequentlyLabel.size());
+            //try to test cycle
+            ArrayList<ArrayList<Integer>> cycleLengths = new ArrayList<>();
+            for (int i = 0; i < sameFrequentlyLabel.size(); i++)
+                cycleLengths.add(new ArrayList<Integer>());
 
-            ((int[]) (node.get(0)))[1] = sameFrequentlyLabel.get(label).label;
+//            int cycleLength = 3;
+            for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
+                boolean flag = false;
+                for (int j = 0; j < sameFrequentlyLabel.get(i).counter; j++) {
+                    int tmp = getCycleLength(((int[])(node.get(0)))[0], ((int[])(sameFrequentlyLabel.get(i).nodes.get(j)))[0]);
+                    if (tmp == 2) {
+                        result = sameFrequentlyLabel.get(i).label;
+                        flag = true;
+                        break;
+                    }
+                    else {
+                        if(tmp != 0)
+                            cycleLengths.get(i).add(tmp);
+                    }
+                }
+                if (flag)
+                    break;
+            }
+            if(result == -1){
+                int minLength = Integer.MAX_VALUE;
+                int indexMinLabel = -1;
+                for (int i = 0; i < cycleLengths.size(); i++) {
+                    for (int j = 0; j < cycleLengths.get(i).size(); j++) {
+                        if(cycleLengths.get(i).get(j) < minLength){
+                            minLength = cycleLengths.get(i).get(j);
+                            indexMinLabel = i;
+                        }
+                    }
+                }
+                if(indexMinLabel == -1)
+                {
+                    Random r = new Random();
+                    indexMinLabel = r.nextInt(cycleLengths.size());
+                    result = sameFrequentlyLabel.get(indexMinLabel).label;
+                }
+            }
+
+            ((int[]) (node.get(0)))[1] = result;
         }
 
         //update value of node in list of it's neighbour
