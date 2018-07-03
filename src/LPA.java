@@ -107,18 +107,48 @@ public class LPA {
                     break;
             }
             //try to test cycle
+            ArrayList<ArrayList<Integer>> cycleLengths = new ArrayList<>();
+            for (int i = 0; i < sameFrequentlyLabel.size(); i++)
+                cycleLengths.add(new ArrayList<Integer>());
+
+//            int cycleLength = 3;
             for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
                 boolean flag = false;
                 for (int j = 0; j < sameFrequentlyLabel.get(i).counter; j++) {
-                    if (detectCycleBetween2Vertex(((int[]) (node.get(0)))[0], ((int[]) (sameFrequentlyLabel.get(i).nodes.get(j)))[0])) {
-                        ((int[]) (node.get(0)))[1] = sameFrequentlyLabel.get(i).label;
+                    int tmp = getCycleLength(((int[])(node.get(0)))[0], ((int[])(sameFrequentlyLabel.get(i).nodes.get(j)))[0]);
+                    if (tmp == 2) {
+                        result = sameFrequentlyLabel.get(i).label;
                         flag = true;
                         break;
+                    }
+                    else {
+                        if(tmp != 0)
+                            cycleLengths.get(i).add(tmp);
                     }
                 }
                 if (flag)
                     break;
             }
+            if(result == -1){
+                int minLength = Integer.MAX_VALUE;
+                int indexMinLabel = -1;
+                for (int i = 0; i < cycleLengths.size(); i++) {
+                    for (int j = 0; j < cycleLengths.get(i).size(); j++) {
+                        if(cycleLengths.get(i).get(j) < minLength){
+                            minLength = cycleLengths.get(i).get(j);
+                            indexMinLabel = i;
+                        }
+                    }
+                }
+                if(indexMinLabel == -1)
+                {
+                    Random r = new Random();
+                    indexMinLabel = r.nextInt(cycleLengths.size());
+                    result = sameFrequentlyLabel.get(indexMinLabel).label;
+                }
+            }
+
+            ((int[]) (node.get(0)))[1] = result;
         }
 
         //update value of node in list of it's neighbour
@@ -298,7 +328,13 @@ public class LPA {
         ArrayList<int[]> nodes = new ArrayList<>();
     }
 
-    public int getShortestPath(int u, int v){
+    /**
+     * this method return shortest distance between two node
+     * @param u start point
+     * @param v end point
+     * @return length
+     */
+    private int getShortestPath(int u, int v){
         Vector<Boolean> visited = new Vector<Boolean>(nodesCount + 1);
         for (int i = 0; i < nodesCount + 1; i++)
             visited.addElement(false);
@@ -322,15 +358,27 @@ public class LPA {
 
             for (int i=1; i< graph.get(x).size(); i++)
             {
-                if (visited.elementAt(((int[])(graph.get(x).get(i)))[0]))
+                int tmp = ((int[])(graph.get(x).get(i)))[0];
+                if(tmp == -1)
+                    continue;
+                if (visited.elementAt(tmp))
                     continue;
 
                 // update distance for i
-                distance.setElementAt(distance.get(x) + 1,((int[])(graph.get(x).get(i)))[0]);
+                distance.setElementAt(distance.get(x) + 1,tmp);
                 Q.add(((int[])(graph.get(x).get(i)))[0]);
-                visited.setElementAt(true,((int[])(graph.get(x).get(i)))[0]);
+                visited.setElementAt(true,tmp);
             }
         }
         return distance.get(v);
+    }
+
+    public int getCycleLength(int start, int end){
+        setLabelForDetectCycle(start, end, -1);
+        setLabelForDetectCycle(end, start, -1);
+        int res = getShortestPath(start, end);
+        setLabelForDetectCycle(start, -1, end);
+        setLabelForDetectCycle(end, -1, start);
+        return res;
     }
 }

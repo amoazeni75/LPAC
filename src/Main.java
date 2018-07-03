@@ -7,9 +7,9 @@ public class Main {
 
         long startTime = System.currentTimeMillis();
         String truePath = "./Test/community.txt";
-        String path = "./network1.txt";
-        LPA sampleDetection = new LPA(path, 6);
-        int x = sampleDetection.getShortestPath(1,6);
+        String path = "./Test/network.txt";
+        LPA sampleDetection = new LPA(path, 100000);
+
         Vector<Integer> res = sampleDetection.getPrediction();
 //        System.out.println("----------------");
 //        for (int i = 0; i < res.size(); i++) {
