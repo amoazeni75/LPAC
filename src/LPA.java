@@ -57,7 +57,7 @@ public class LPA extends Thread {
 //        numberHelp.add(2);
         while (t < maxIteration && !endProcess) {
             //shuffle all nodes
-            Collections.shuffle(numberHelp);
+            //Collections.shuffle(numberHelp);
             //set New Label for each node
             for (int i = 0; i < numberHelp.size(); i++)
                 setNewLabelOfNode(graph.get(numberHelp.get(i)));

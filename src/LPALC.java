@@ -57,7 +57,7 @@ public class LPALC extends Thread {
 //        numberHelp.add(2);
         while (t < maxIteration && !endProcess) {
             //shuffle all nodes
-            Collections.shuffle(numberHelp);
+            //Collections.shuffle(numberHelp);
             //set New Label for each node
             for (int i = 0; i < numberHelp.size(); i++)
                 setNewLabelOfNode(graph.get(numberHelp.get(i)));
@@ -112,7 +112,6 @@ public class LPALC extends Thread {
             for (int i = 0; i < sameFrequentlyLabel.size(); i++)
                 cycleLengths.add(new ArrayList<Integer>());
 
-//            int cycleLength = 3;
             for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
                 boolean flag = false;
                 for (int j = 0; j < sameFrequentlyLabel.get(i).counter; j++) {
@@ -141,12 +140,15 @@ public class LPALC extends Thread {
                         }
                     }
                 }
+
                 if(indexMinLabel == -1)
                 {
                     Random r = new Random();
                     indexMinLabel = r.nextInt(cycleLengths.size());
                     result = sameFrequentlyLabel.get(indexMinLabel).label;
                 }
+                else
+                    result = sameFrequentlyLabel.get(indexMinLabel).label;
             }
 
             ((int[]) (node.get(0)))[1] = result;
