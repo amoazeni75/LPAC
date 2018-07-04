@@ -49,15 +49,10 @@ public class LPA extends Thread {
         ArrayList<Integer> numberHelp = new ArrayList<>();
         for (int i = 0; i < graph.size() - 1; i++)
             numberHelp.add(i + 1);
-//        numberHelp.add(3);
-//        numberHelp.add(4);
-//        numberHelp.add(6);
-//        numberHelp.add(5);
-//        numberHelp.add(1);
-//        numberHelp.add(2);
+
         while (t < maxIteration && !endProcess) {
             //shuffle all nodes
-            //Collections.shuffle(numberHelp);
+            Collections.shuffle(numberHelp);
             //set New Label for each node
             for (int i = 0; i < numberHelp.size(); i++)
                 setNewLabelOfNode(graph.get(numberHelp.get(i)));

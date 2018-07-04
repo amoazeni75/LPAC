@@ -49,15 +49,10 @@ public class LPALC extends Thread {
         ArrayList<Integer> numberHelp = new ArrayList<>();
         for (int i = 0; i < graph.size() - 1; i++)
             numberHelp.add(i + 1);
-//        numberHelp.add(3);
-//        numberHelp.add(4);
-//        numberHelp.add(6);
-//        numberHelp.add(5);
-//        numberHelp.add(1);
-//        numberHelp.add(2);
+
         while (t < maxIteration && !endProcess) {
             //shuffle all nodes
-            //Collections.shuffle(numberHelp);
+            Collections.shuffle(numberHelp);
             //set New Label for each node
             for (int i = 0; i < numberHelp.size(); i++)
                 setNewLabelOfNode(graph.get(numberHelp.get(i)));
@@ -70,7 +65,6 @@ public class LPALC extends Thread {
         for (int i = 0; i < graph.size(); i++)
             prediction.add(((int[]) (graph.get(i).get(0)))[1]);
 
-        //return prediction;
     }
 
     /**
@@ -107,50 +101,29 @@ public class LPALC extends Thread {
                 } else
                     break;
             }
-            //try to test cycle
-            ArrayList<ArrayList<Integer>> cycleLengths = new ArrayList<>();
-            for (int i = 0; i < sameFrequentlyLabel.size(); i++)
-                cycleLengths.add(new ArrayList<Integer>());
-
+            ArrayList<Integer> mostNode = new ArrayList<>();
             for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
-                boolean flag = false;
                 for (int j = 0; j < sameFrequentlyLabel.get(i).counter; j++) {
-                    int tmp = getCycleLength(((int[])(node.get(0)))[0], ((int[])(sameFrequentlyLabel.get(i).nodes.get(j)))[0]);
-                    if (tmp == 2) {
+                    mostNode.add(sameFrequentlyLabel.get(i).nodes.get(j)[0]);
+                }
+            }
+            //try to get shortest cycle
+            result = detectShortestCycle(mostNode,((int[])node.get(0))[0]);
+
+            //means that there is not exist any cycle that contains this node, so we set the label randomly from it's most frequently
+            if(result == -1){
+                int index = new Random().nextInt(sameFrequentlyLabel.size());
+                result = sameFrequentlyLabel.get(index).label;
+            }
+            else
+            {
+                for (int i = 0; i < sameFrequentlyLabel.size(); i++) {
+                    if(sameFrequentlyLabel.get(i).nodes.contains(result)) {
                         result = sameFrequentlyLabel.get(i).label;
-                        flag = true;
                         break;
                     }
-                    else {
-                        if(tmp != 0)
-                            cycleLengths.get(i).add(tmp);
-                    }
                 }
-                if (flag)
-                    break;
             }
-            if(result == -1){
-                int minLength = Integer.MAX_VALUE;
-                int indexMinLabel = -1;
-                for (int i = 0; i < cycleLengths.size(); i++) {
-                    for (int j = 0; j < cycleLengths.get(i).size(); j++) {
-                        if(cycleLengths.get(i).get(j) < minLength){
-                            minLength = cycleLengths.get(i).get(j);
-                            indexMinLabel = i;
-                        }
-                    }
-                }
-
-                if(indexMinLabel == -1)
-                {
-                    Random r = new Random();
-                    indexMinLabel = r.nextInt(cycleLengths.size());
-                    result = sameFrequentlyLabel.get(indexMinLabel).label;
-                }
-                else
-                    result = sameFrequentlyLabel.get(indexMinLabel).label;
-            }
-
             ((int[]) (node.get(0)))[1] = result;
         }
 
@@ -158,6 +131,90 @@ public class LPALC extends Thread {
         updateValueOfNodeInNeighbourList(node);
     }
 
+    int detectShortestCycle(ArrayList<Integer> mostFrequently,int startNode){
+        int label = -1;
+        //key = node, value = parent
+        LinkedHashMap<Integer,Integer> leftArray = new LinkedHashMap<>();
+        LinkedHashMap<Integer,Integer> rightArray = new LinkedHashMap<>();
+        rightArray.put(startNode,startNode);
+        while(!rightArray.isEmpty()){
+            Integer item = (Integer) rightArray.keySet().toArray()[0];
+            Integer itemParent = (Integer) rightArray.values().toArray()[0];
+            rightArray.remove(item);
+            leftArray.put(item,itemParent);
+            //Integer itemParent = (Integer) rightArray.values().toArray()[0];
+            boolean canContinue = true;
+            for (int i = 1; i < graph.get(item).size(); i++) {
+                int n = ((int[]) (graph.get(item).get(i)))[0];
+                if(n == -1)
+                    continue;
+                if(leftArray.containsKey(n))
+                    continue;
+                else{
+                    if(!rightArray.containsKey(n))
+                        rightArray.put(n,item);
+                    else{
+                        int secondParent = item;
+                        int firstParent = rightArray.get(n).intValue();
+                        if(validateCycle(leftArray,startNode,secondParent,firstParent)){
+                            int res = validateCycleIsFrequentlyNeighbour(startNode,leftArray,firstParent,secondParent,mostFrequently);
+                            if(res != -1){
+                                label = res;
+                                canContinue = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if(!canContinue)
+                break;
+        }
+        return label;
+    }
+
+    public int validateCycleIsFrequentlyNeighbour(int startNode,LinkedHashMap<Integer,Integer> leftArray,int firstParent,int secondParent,ArrayList<Integer> mostFrequently){
+        int childOfNode = getChildOfStartNode(startNode,firstParent,leftArray);
+        if(mostFrequently.contains(childOfNode))
+            return childOfNode;
+        childOfNode = getChildOfStartNode(startNode,secondParent,leftArray);
+        if(mostFrequently.contains(childOfNode))
+            return childOfNode;
+        return -1;
+    }
+
+    public int getChildOfStartNode(int startNode,int startChain,LinkedHashMap<Integer,Integer> leftArray){
+        int res = -1;
+        int item = leftArray.get(startChain).intValue();
+        while (item != startNode){
+            startChain = item;
+            item = leftArray.get(item).intValue();
+        }
+        res = startChain;
+        return res;
+    }
+    public boolean validateCycle(LinkedHashMap<Integer,Integer> leftArray,int startNode, int secondParent,int firstParent){
+        boolean res = true;
+        LinkedHashMap<Integer,Integer> chainMembers = new LinkedHashMap<>();
+        if(!getParents(startNode,firstParent,chainMembers,leftArray))
+            return false;
+        if(!getParents(startNode,secondParent,chainMembers,leftArray))
+            return false;
+        return res;
+    }
+
+    public boolean getParents(int startNode,int startChain,LinkedHashMap<Integer,Integer> chainMembers,LinkedHashMap<Integer,Integer> leftArray){
+        boolean res = true;
+        while (startChain != startNode){
+            if(chainMembers.containsKey(startChain))
+                return false;
+            else {
+                chainMembers.put(startChain, -1);
+                startChain = leftArray.get(startChain).intValue();
+            }
+        }
+        return res;
+    }
     /**
      * this method detect that there is a cycle between two vertex or not
      *

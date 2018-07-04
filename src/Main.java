@@ -8,6 +8,6 @@ public class Main {
         String truePath = "./Test/community.txt";
         String path = "./Test/network.txt";
         Tester test = new Tester(path,truePath,10000);
-        test.TesterALG(3);
+        test.TesterALG(1);
     }
 }
