@@ -27,10 +27,11 @@ public class Tester {
             int testCount = 100;
             ArrayList<Vector<Integer>> tests = new ArrayList<>();
             ArrayList<LPALC> workers = new ArrayList<>();
+            Vector<Vector> graph = ReaderWriter.reader(netPath, nodeCount);
             startTime = System.currentTimeMillis();
             for (int i = 0; i < (testCount / threadCount); i++) {
                 for (int j = 0; j < threadCount; j++) {
-                    LPALC t = new LPALC(netPath, nodeCount);
+                    LPALC t = new LPALC(nodeCount,graph);
                     workers.add(t);
                     t.start();
                 }
@@ -58,10 +59,11 @@ public class Tester {
             int testCount = 12;
             ArrayList<Vector<Integer>> tests = new ArrayList<>();
             ArrayList<LPA> workers = new ArrayList<>();
+            Vector<Vector> graph = ReaderWriter.reader(netPath, nodeCount);
             startTime = System.currentTimeMillis();
             for (int i = 0; i < (testCount / threadCount); i++) {
                 for (int j = 0; j < threadCount; j++) {
-                    LPA t = new LPA(netPath, nodeCount);
+                    LPA t = new LPA(nodeCount,graph);
                     workers.add(t);
                     t.start();
                 }
@@ -85,16 +87,26 @@ public class Tester {
 
         } else if (index == 3) {
             //LPALC Single Core
-            LPALC sampleDetection = new LPALC(netPath, nodeCount);
+            Vector<Vector> graph = ReaderWriter.reader(netPath, nodeCount);
+            LPALC sampleDetection = new LPALC(nodeCount,graph);
+            startTime = System.currentTimeMillis();
             sampleDetection.getPrediction();
+            endTime = System.currentTimeMillis();
+            duringTime = (endTime - startTime);
+            System.err.println("Execution time : " + duringTime + " ms");
             Vector<Integer> res = sampleDetection.prediction;
             System.out.println("NMI LPALC 1 Time : " + TestResult.NMI(res, resPath));
             //sampleDetection.showGraph();
 
         } else if (index == 4) {
             //LPA Single Core
-            LPA sampleDetection = new LPA(netPath, nodeCount);
+            Vector<Vector> graph = ReaderWriter.reader(netPath, nodeCount);
+            LPA sampleDetection = new LPA(nodeCount,graph);
+            startTime = System.currentTimeMillis();
             sampleDetection.getPrediction();
+            endTime = System.currentTimeMillis();
+            duringTime = (endTime - startTime);
+            System.err.println("Execution time : " + duringTime + " ms");
             Vector<Integer> res = sampleDetection.prediction;
             System.out.println("NMI LPA 1 Time : " + TestResult.NMI(res, resPath));
            // sampleDetection.showGraph();

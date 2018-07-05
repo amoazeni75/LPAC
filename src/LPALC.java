@@ -26,11 +26,11 @@ public class LPALC extends Thread {
      * get the location of community and number of nodes </br>
      * then create graph from file
      *
-     * @param path       is the location of network file
+     is the location of network file
      * @param nodesCount is the number of nodes in the community
      */
-    public LPALC(String path, int nodesCount) throws IOException {
-        this.graph = ReaderWriter.reader(path, nodesCount);
+    public LPALC(int nodesCount,Vector<Vector> graph) throws IOException {
+        this.graph = graph;
         this.nodesCount = nodesCount;
         prediction = null;
     }
